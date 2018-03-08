@@ -44,7 +44,8 @@ with open(model, "r", encoding="UTF-8") as file:
         word = line[0]
         next_word = line[1]
         frequency = int(line[2])
-        first_word.append(word)
+        if word not in first_word:
+            first_word.append(word)
         if word in diction:
             diction[word].setdefault(next_word, frequency)
         else:
