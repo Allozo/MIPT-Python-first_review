@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+print()
 print("Введите --help для получения списка команд")
 
 command = input()
