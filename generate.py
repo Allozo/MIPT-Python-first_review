@@ -21,16 +21,16 @@ print("Введите длину последовательности")
 size = int(input())
 new_text = [word]
 for i in range(size - 1):
-    listik = []
+    list_next_words = []
     frequency = []
     number = 0
     for two_word in diction[new_text[i]]:      # пробегаемся по всем вторым словам
         number += diction[new_text[i]][two_word]
-        listik.append(two_word)
-    for j in range(len(listik)):
-        frequency.append(diction[new_text[i]][listik[j]] / number)
-    np.random.choice(listik, len(listik), frequency)
-    selected_word = listik[0]
+        list_next_words.append(two_word)
+    for j in range(len(list_next_words)):
+        frequency.append(diction[new_text[i]][list_next_words[j]] / number)
+    np.random.choice(list_next_words, len(list_next_words), frequency)
+    selected_word = list_next_words[0]
     new_text.append(selected_word)
 for words in new_text:
     print(words, end=" ")
