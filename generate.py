@@ -1,40 +1,16 @@
 import numpy as np
 import random
+import argparse
 
-print()
-print("Введите --help для получения списка команд")
+parser = argparse.ArgumentParser(description="создание цепочки")
+parser.add_argument("--model", type=str, help="путь до модели")
+parser.add_argument("--seed", type=str, default="", help="Начальное слово. Опционально")
+parser.add_argument("--length", type=int, help="Длина модели")
+args = parser.parse_args()
 
-command = input()
-
-if command == "--help":
-    print("--model - путь к файлу, из которого загружается модель.")
-    print("--seed - Начальное слово. Если не указано, выбирается"
-          "случайное слово из всех слов.")
-    print("--length - длина генерируемой последовательности.")
-    print("Порядок ввода аргументов: --model <path> --length <number> --seed <word>")
-    print("Пример:")
-    print("--model /home/.../model.txt --length 10 --seed exemple")
-    command = input()
-
-# обработка команды
-i = 8                       # обходим с его помощью строку с командой
-# путь до модели
-while command[i] != " ":
-    i += 1
-model = command[8:i]
-i += 10
-k = i
-# получаем длину
-while command[i] != " ":
-    i += 1
-length = int(command[k:i])
-# получаем начальное слово
-seed = ""
-if "--seed" in command:
-    i += 8
-    seed = command[i:].split()
-    seed = seed[0]
-# команду обработали
+model = args.model                                  # указали путь к модели
+seed = args.seed
+length = args.length
 
 # загрузка словаря
 diction = dict()
@@ -56,6 +32,7 @@ size_first_word = len(first_word)
 if seed == "":
     rand = random.randint(0, size_first_word)
     seed = first_word[rand]
+
 # построение цепочки
 new_text = [seed]                                       # тут будут слова для последовательности
 for i in range(length - 1):
@@ -76,3 +53,4 @@ for i in range(length - 1):
     new_text.append(selected_word)                                              # добавили его
 for words in new_text:
     print(words, end=" ")
+print()

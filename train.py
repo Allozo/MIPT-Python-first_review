@@ -1,5 +1,6 @@
 import re
 import os
+import argparse
 
 
 def processing(lines, dictions, lowers):
@@ -22,41 +23,26 @@ def processing(lines, dictions, lowers):
     return dictions
 
 
-print()
-print("Введите --help для получения списка команд")
-command = input()
-if command == "--help":
-    print("--lc - необязательный аргумент. Приводить тексты к lowercase. "
-          "Для использования введите раньше, чем другие команды.")
-    print("--input-dir - путь к директории, в которой лежит коллекция документов. "
-          "Если не задан, то вводится текст из потока. Чтобы его остановить введите '~stop' ")
-    print("--model - путь к файлу, в который сохраняется модель.")
-    command = input()
-
+parser = argparse.ArgumentParser()
+group = parser.add_mutually_exclusive_group()
+group.add_argument("--lc", action="store_true", help="Приводить тексты к lowercase.")
+parser.add_argument("--input", "--input-dir", type=str, default="", help="путь до папки с документами")
+parser.add_argument("--model", type=str, help="путь до файла, куда сохранится модель")
+args = parser.parse_args()
 lower = 0
-if command == "--lc":
+if args.lc:                                         # если нужно приводить к нижнему регистру
     lower = 1
-    command = input()
-
-flag = 0
-if "--input-dir" in command:
-    flag = 1
-    if command[12] == '.':
-        directory = os.getcwd()
-        files = os.listdir(directory)
-        txt = list(filter(lambda x: x.endswith('.txt'), files))
-        model = command[23:]  # путь куда сохранять модель
-    else:
-        i = 12
-        while command[i] != " ":
-            i += 1
-        directory = command[12:i]
-        files = os.listdir(directory)
-        txt = list(filter(lambda x: x.endswith('.txt'), files))
-        model = command[i + 9:]
+directory = args.input                              # указали путь к документам
+if directory == ".":                                # если пользователь написал "--input-dir ."
+    directory = os.getcwd()
+flag = 1                                            # пометка, что данные будут считываться из потока
+txt = []                                            # тут будут лежать названия документов
+if directory == "":
+    flag = 0
 else:
-    model = command[8:]
-
+    files = os.listdir(directory)
+    txt = list(filter(lambda x: x.endswith('.txt'), files))
+model = args.model                                  # указали путь к модели
 
 diction = dict()  # тут будут храниться связки слов
 if flag == 1:
