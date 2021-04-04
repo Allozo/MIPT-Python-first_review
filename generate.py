@@ -1,56 +1,97 @@
 import numpy as np
 import random
 import argparse
+import pickle
 
-parser = argparse.ArgumentParser(description="создание цепочки")
-parser.add_argument("--model", type=str, help="путь до модели")
-parser.add_argument("--seed", type=str, default="", help="Начальное слово. Опционально")
-parser.add_argument("--length", type=int, help="Длина модели")
-args = parser.parse_args()
 
-model = args.model                                  # указали путь к модели
-seed = args.seed
-length = args.length
+def building_chain_words(text, length, possible_first_words, diction):
+    for i in range(length - 1):
+        # тут будут слова, которые могут идти после
+        list_next_words = []
 
-# загрузка словаря
-diction = dict()
-first_word = []
-with open(model, "r", encoding="UTF-8") as file:
-    for line in file:
-        line = line.split()
-        word = line[0]
-        next_word = line[1]
-        frequency = int(line[2])
-        if word not in first_word:
-            first_word.append(word)
-        if word in diction:
-            diction[word].setdefault(next_word, frequency)
-        else:
-            diction.setdefault(word, {next_word: frequency})
+        if text[i] not in diction:
+            rand = random.randint(0, len(possible_first_words))
+            text.append(possible_first_words[rand])
+            continue
 
-size_first_word = len(first_word)
-if seed == "":
-    rand = random.randint(0, size_first_word)
-    seed = first_word[rand]
+        # частота соответствующая слову в list_next_words
+        frequency = []
 
-# построение цепочки
-new_text = [seed]                                       # тут будут слова для последовательности
-for i in range(length - 1):
-    list_next_words = []                                # тут будут слова, которые могут идти после
-    if new_text[i] not in diction:                      # если последнего слова нет в словаре, то берем случайное
-        rand = random.randint(0, size_first_word)
-        new_text.append(first_word[rand])
-        continue
-    frequency = []                                      # частота соответствующая слову в list_next_words
-    number = 0                                          # сумма частот в list_next_words
-    for two_word in diction[new_text[i]]:               # пробегаемся по всем вторым словам
-        number += diction[new_text[i]][two_word]        # считаем общую частоту
-        list_next_words.append(two_word)                # добавили из словаря возможное следующее слово
-    for j in range(len(list_next_words)):               # расставим частоту
-        frequency.append(diction[new_text[i]][list_next_words[j]] / number)     # расставили частоту
-    np.random.choice(list_next_words, len(list_next_words), frequency)          # рандом. перемешивание
-    selected_word = list_next_words[0]                                          # выбрали слово
-    new_text.append(selected_word)                                              # добавили его
-for words in new_text:
-    print(words, end=" ")
-print()
+        # сумма частот в list_next_words
+        number = 0
+
+        # пробегаемся по всем вторым словам
+        for second_word in diction[text[i]]:
+            # считаем общую частоту
+            number += diction[text[i]][second_word]
+            list_next_words.append(second_word)
+
+        for j in list_next_words:  # расставим частоту
+            frequency.append(diction[text[i]][j] / number)
+
+        # получаем следующее слово
+        selected_word = np.random.choice(list_next_words, p=frequency)
+        text.append(selected_word)
+
+
+def print_chain_words(text_path, text, is_file):
+    if is_file:
+        with open(text_path, "w", encoding="UTF-8") as file:
+            for word_in_text in text:
+                file.write(word_in_text + " ")
+    else:
+        for word_in_text in text:
+            print(word_in_text, end=" ")
+        print()
+
+
+def generate(args):
+    # указали путь к модели
+    model_file_name = args.model
+
+    # указали первое слово цепочки
+    seed = args.seed
+
+    # указали длину цепочки
+    length = args.length
+
+    # загрузка словаря
+    with open(model_file_name, "rb") as file:
+        diction = pickle.load(file)
+
+    # создаем список первых слов
+    possible_first_words = []
+    for key in diction:
+        possible_first_words.append(key)
+
+    # если слова нет, то получаем случайное из всех первых
+    if seed == "":
+        rand = random.randint(0, len(possible_first_words))
+        seed = possible_first_words[rand]
+
+    # флаг, который укажет, будем ли мы сохранять цепочку слов
+    if args.output == "":
+        is_file = False
+        text_path = ""
+    else:
+        is_file = True
+        text_path = args.output
+
+    # тут будут слова для последовательности
+    text = [seed]
+    building_chain_words(text, length, possible_first_words, diction)
+
+    # вывод/ сохранение цепочки
+    print_chain_words(text_path, text, is_file)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="создание цепочки")
+    parser.add_argument("--model", type=str, help="путь до модели")
+    parser.add_argument("--seed", type=str, default="",
+                        help="Начальное слово. Опционально")
+    parser.add_argument("--length", type=int, help="Длина модели")
+    parser.add_argument("--output", type=str, default="",
+                        help="Путь, куда сохранить цепочку слов")
+    arg = parser.parse_args()
+    generate(arg)
